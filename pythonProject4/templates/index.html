@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLURT IT OUT!!</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>BLURT IT OUT</h1>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Type a message..." autofocus>
+        <button id="send-btn">Send</button>
+        <button id="next-btn">Next</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io();
+
+        var messageInput = document.getElementById('message-input');
+        var sendBtn = document.getElementById('send-btn');
+        var nextBtn = document.getElementById('next-btn');
+        var messagesDiv = document.getElementById('messages');
+
+        // Send message to server when 'Send' button is clicked
+        sendBtn.onclick = function() {
+            var message = messageInput.value.trim();
+            if (message) {
+                socket.send(message);
+                var messageElement = document.createElement('div');
+                messageElement.textContent = "You: " + message;
+                messagesDiv.appendChild(messageElement);
+                messageInput.value = '';
+            }
+        };
+
+        // Request a new chat when 'Next' button is clicked
+        nextBtn.onclick = function() {
+            socket.emit('next');
+            messagesDiv.innerHTML = '';  // Clear previous messages
+        };
+
+        // Handle incoming messages from the server
+        socket.on('message', function(msg) {
+            var messageElement = document.createElement('div');
+            messageElement.textContent = "Stranger: " + msg;
+            messagesDiv.appendChild(messageElement);
+        });
+
+        // Handle user disconnection
+        socket.on('disconnect', function() {
+            var messageElement = document.createElement('div');
+            messageElement.textContent = "Your chat partner has disconnected.";
+            messagesDiv.appendChild(messageElement);
+        });
+    </script>
+</body>
+</html>
